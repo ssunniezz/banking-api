@@ -42,5 +42,9 @@ http://127.0.0.1:8000/swagger/
 - POST /api/accounts/{id}/transfer/: Transfer an amount from one account to another.
 
 ### Transactions
-- GET /api/transactions/: List all transactions.
+- GET /api/transactions/: List all transactions ( multiple filters supported ).
 - GET /api/transactions/{id}/: Retrieve transaction details.
+
+## Proof
+![Swagger](https://drive.google.com/uc?export=view&id=1Jm59RWT1qp_hcxL4gXMvuEPDRSVCqH_h)
+![Test Result](https://drive.google.com/uc?export=view&id=1hRsMv-yx8SQyRceU5Kwl5gwZ5BtrGEhi)
