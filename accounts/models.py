@@ -5,17 +5,9 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 class User(AbstractUser):
     pass  # Extend as needed
 
-    # Override groups and user_permissions with custom related_name
-    groups = models.ManyToManyField(
-        Group,
-        related_name='custom_user_set',  # Change the related_name to avoid clashes
-        blank=True,
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='custom_user_permissions_set',  # Change the related_name to avoid clashes
-        blank=True,
-    )
+    # Override groups and user_permissions
+    groups = None
+    user_permissions = None
 
 
 class Account(models.Model):
