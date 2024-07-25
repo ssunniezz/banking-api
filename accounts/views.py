@@ -30,11 +30,13 @@ class UserTokenRefreshView(TokenRefreshView):
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -74,6 +76,8 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CustomAccountViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="Deposit an amount into a specific bank account.",
         request_body=openapi.Schema(
