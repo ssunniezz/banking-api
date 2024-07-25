@@ -2,6 +2,8 @@
 
 This is a Django-based API for a fake financial institution. The API allows users to create accounts, make deposits, withdrawals, and transfers, and view transaction history.
 
+Additionally, as our Banking Company is expanding globally, we support multiple currency accounts and cross-currency transactions (currently only THB and USD).
+
 ## Setup Instructions
 
 Follow these steps to set up the project on your local machine.

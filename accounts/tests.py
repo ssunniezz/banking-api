@@ -49,7 +49,7 @@ class AccountTestCase(APITestCase):
 
     def test_delete_account_with_referenced_transactions(self):
         # Create a transaction
-        Transaction.objects.create(account=self.account1, to_account=self.account2, amount=Decimal('50.00'), transaction_type='transfer')
+        Transaction.objects.create(account=self.account1, to_account=self.account2, amount=Decimal('50.00'), real_amount=Decimal('50.00'), transaction_type='transfer')
 
         response = self.client.delete(reverse('account-detail', kwargs={'pk': self.account2.id}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -74,10 +74,10 @@ class TransactionTestCase(APITestCase):
         self.account1 = Account.objects.create(user=self.user1, balance=Decimal('100.00'))
         self.account2 = Account.objects.create(user=self.user2, balance=Decimal('200.00'))
         self.transaction1 = Transaction.objects.create(
-            account=self.account1, to_account=self.account2, amount=Decimal('50.00'), transaction_type='transfer'
+            account=self.account1, to_account=self.account2, amount=Decimal('50.00'), real_amount=Decimal('50.00'), transaction_type='transfer'
         )
         self.transaction2 = Transaction.objects.create(
-            account=self.account1, amount=Decimal('30.00'), transaction_type='withdraw'
+            account=self.account1, amount=Decimal('30.00'), real_amount=Decimal('30.00'), transaction_type='withdraw'
         )
         self.client = APIClient()
 
@@ -126,6 +126,7 @@ class AccountTransactionTestCase(APITestCase):
         self.user2 = User.objects.create_user(username='user2', password='password123')
         self.account1 = Account.objects.create(user=self.user1, balance=Decimal('100.00'))
         self.account2 = Account.objects.create(user=self.user2, balance=Decimal('200.00'))
+        self.account3 = Account.objects.create(user=self.user2, balance=Decimal('200.00'), currency='USD')
         self.client = APIClient()
 
         # Obtain JWT tokens for authentication
@@ -142,6 +143,17 @@ class AccountTransactionTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.account1.refresh_from_db()
         self.assertEqual(self.account1.balance, Decimal('150.00'))
+        self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='deposit').count(), 1)
+
+    def test_deposit_with_currency_conversion(self):
+        data = {
+            'amount': '1.00',
+            'currency': 'USD'
+        }
+        response = self.client.post(reverse('custom_account-deposit', kwargs={'pk': self.account1.id}), data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.account1.refresh_from_db()
+        self.assertEqual(self.account1.balance, Decimal('130.00'))  # Assuming 1 USD = 3 THB
         self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='deposit').count(), 1)
 
     def test_withdraw(self):
@@ -164,6 +176,17 @@ class AccountTransactionTestCase(APITestCase):
         self.assertEqual(self.account1.balance, Decimal('100.00'))
         self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='withdraw').count(), 0)
 
+    def test_withdraw_with_currency_conversion(self):
+        data = {
+            'amount': '1.00',
+            'currency': 'USD'
+        }
+        response = self.client.post(reverse('custom_account-withdraw', kwargs={'pk': self.account1.id}), data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.account1.refresh_from_db()
+        self.assertEqual(self.account1.balance, Decimal('70.00'))
+        self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='withdraw').count(), 1)
+
     def test_transfer(self):
         data = {
             'to_account_id': self.account2.id,
@@ -177,6 +200,21 @@ class AccountTransactionTestCase(APITestCase):
         self.assertEqual(self.account2.balance, Decimal('250.00'))
         self.assertEqual(Transaction.objects.filter(account=self.account1, to_account=self.account2, transaction_type='transfer').count(), 1)
 
+    def test_transfer_with_currency_conversion(self):
+        data = {
+            'to_account_id': self.account2.id,
+            'amount': '1.00',
+            'currency': 'USD'
+        }
+        response = self.client.post(reverse('custom_account-transfer', kwargs={'pk': self.account1.id}), data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.account1.refresh_from_db()
+        self.account2.refresh_from_db()
+        self.assertEqual(self.account1.balance, Decimal('70'))
+        self.assertEqual(self.account2.balance, Decimal('230'))
+        self.assertEqual(Transaction.objects.filter(account=self.account1, to_account=self.account2,
+                                                    transaction_type='transfer').count(), 1)
+
     def test_transfer_insufficient_funds(self):
         data = {
             'to_account_id': self.account2.id,
@@ -189,6 +227,21 @@ class AccountTransactionTestCase(APITestCase):
         self.assertEqual(self.account1.balance, Decimal('100.00'))
         self.assertEqual(self.account2.balance, Decimal('200.00'))
         self.assertEqual(Transaction.objects.filter(account=self.account1, to_account=self.account2, transaction_type='transfer').count(), 0)
+
+    def test_transfer_insufficient_funds_with_currency_conversion(self):
+        data = {
+            'to_account_id': self.account2.id,
+            'amount': '100.00',
+            'currency': 'USD'
+        }
+        response = self.client.post(reverse('custom_account-transfer', kwargs={'pk': self.account1.id}), data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.account1.refresh_from_db()
+        self.account2.refresh_from_db()
+        self.assertEqual(self.account1.balance, Decimal('100.00'))
+        self.assertEqual(self.account2.balance, Decimal('200.00'))
+        self.assertEqual(Transaction.objects.filter(account=self.account1, to_account=self.account2,
+                                                    transaction_type='transfer').count(), 0)
 
     def test_transfer_same_account(self):
         data = {
