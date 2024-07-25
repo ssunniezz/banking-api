@@ -1,31 +1,46 @@
-# Banking Application
+# Django Banking API Project
 
-## Objective
+This is a Django-based API for a fake financial institution. The API allows users to create accounts, make deposits, withdrawals, and transfers, and view transaction history.
 
-Your assignment is to build an internal API for a fake financial institution using Python and Django. 
+## Setup Instructions
 
-## Brief
+Follow these steps to set up the project on your local machine.
 
-You are tasked with an assignment to replicate one of, if not, the most well-defined Banking application well known to man. Well, at least that's what your Boss said. Actually, you're supposed to replicate a Banking system because your team want to simulate what it's like to serve a live-service application with top notch security.
+### Prerequisites
 
-Unfortunately (or fortunate), you are the only Backend Engineer in the team. All decisions regarding system design will be made by you!
-As a talented engineer. You know by heart that, functionality of creating account, inquiry, transaction history, deposit, withdraw, and transfer should be bare minimum. Some sort of authorization is obvious enough as well.
+- Python 3.8 or higher
+- pip (Python package installer)
+- Virtualenv (optional but recommended)
+- Source code on your machine
+- Install all dependencies as specify in `requirements.txt`
 
-However, since you are your own boss. You are free to add any *nice-to-have* functionality that you believe it'll benefit users. Still, you will have to be able to explain to your friend why you spend your precious time on them.
+Then run `python manage.py runserver`
 
-Your application should be able to run on your teams' machines. Otherwise, they will be severely disappointed.
+The project will be available at http://127.0.0.1:8000/.
 
-### Evaluation Criteria
-- Python best practices
-- Completeness: did you complete the features?
-- Correctness: does the functionality act in sensible, thought-out ways?
-- Maintainability: is it written in a clean, maintainable way?
-- Testing: is the system adequately tested?
-- Documentation: is the API well-documented?
+## API Endpoints
 
-### CodeSubmit
-Please organize, design, test and document your code as if it were going into production - then push your changes to the master branch. After you have pushed your code, you may submit the assignment on the assignment page.
+API documentation is generated using Swagger and is available at:
 
-All the best and happy coding,
+http://127.0.0.1:8000/swagger/
 
-The Gang Technology Team
+### Authentication
+- POST /register/: Create User to obtain token
+- POST /token/: Obtain JWT token pair (access and refresh tokens).
+- POST token/refresh/: Refresh JWT access token.
+
+##### Endpoints below require authorization, please specify `Authorization: Bearer {token}` in the header, or `Bearer {token}` in the Authorize field in Swagger
+
+### Accounts
+- GET /api/accounts/: List all accounts.
+- POST /api/accounts/: Create a new account.
+- GET /api/accounts/{id}/: Retrieve account details.
+- PUT /api/accounts/{id}/: Update account details.
+- DELETE /api/accounts/{id}/: Delete an account.
+- POST /api/accounts/{id}/deposit/: Deposit an amount into an account.
+- POST /api/accounts/{id}/withdraw/: Withdraw an amount from an account.
+- POST /api/accounts/{id}/transfer/: Transfer an amount from one account to another.
+
+### Transactions
+- GET /api/transactions/: List all transactions.
+- GET /api/transactions/{id}/: Retrieve transaction details.
