@@ -3,6 +3,8 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth.models import User
 from django.urls import reverse
+
+from . import USD_TO_THB_RATE
 from .models import Account, Transaction
 from decimal import Decimal
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -153,7 +155,7 @@ class AccountTransactionTestCase(APITestCase):
         response = self.client.post(reverse('custom_account-deposit', kwargs={'pk': self.account1.id}), data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.account1.refresh_from_db()
-        self.assertEqual(self.account1.balance, Decimal('130.00'))  # Assuming 1 USD = 3 THB
+        self.assertEqual(self.account1.balance, Decimal(100 + 1*USD_TO_THB_RATE))
         self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='deposit').count(), 1)
 
     def test_withdraw(self):
@@ -184,7 +186,7 @@ class AccountTransactionTestCase(APITestCase):
         response = self.client.post(reverse('custom_account-withdraw', kwargs={'pk': self.account1.id}), data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.account1.refresh_from_db()
-        self.assertEqual(self.account1.balance, Decimal('70.00'))
+        self.assertEqual(self.account1.balance, Decimal(100 - 1*USD_TO_THB_RATE))
         self.assertEqual(Transaction.objects.filter(account=self.account1, transaction_type='withdraw').count(), 1)
 
     def test_transfer(self):
@@ -210,8 +212,8 @@ class AccountTransactionTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.account1.refresh_from_db()
         self.account2.refresh_from_db()
-        self.assertEqual(self.account1.balance, Decimal('70'))
-        self.assertEqual(self.account2.balance, Decimal('230'))
+        self.assertEqual(self.account1.balance, Decimal(100 - 1*USD_TO_THB_RATE))
+        self.assertEqual(self.account2.balance, Decimal(200 + 1*USD_TO_THB_RATE))
         self.assertEqual(Transaction.objects.filter(account=self.account1, to_account=self.account2,
                                                     transaction_type='transfer').count(), 1)
 

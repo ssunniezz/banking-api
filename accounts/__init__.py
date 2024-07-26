@@ -1,13 +1,15 @@
 # Let's use my own conversion logic for convenience
 from decimal import Decimal
 
+USD_TO_THB_RATE = 30
+THB_TO_USD_RATE = 0.033
+
 
 def convert(currency: str, target_currency: str, amount: Decimal) -> Decimal:
-    if currency == target_currency:
-        return amount
+    if currency == 'USD' and target_currency == 'THB':
+        return amount * USD_TO_THB_RATE
 
-    if currency == 'USD':
-        return amount * 30
+    if currency == 'THB' and target_currency == 'USD':
+        return amount * Decimal(THB_TO_USD_RATE)
 
-    if currency == 'THB':
-        return amount * Decimal(0.033)
+    return amount
